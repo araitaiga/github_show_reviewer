@@ -1,0 +1,7 @@
+.github-show-reviewer {
+  white-space: normal;
+}
+
+.github-show-reviewer--error {
+  color: var(--fgColor-danger, #cf222e);
+}

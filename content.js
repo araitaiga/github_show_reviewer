@@ -153,9 +153,9 @@
 
         // Promise.all: 複数の非同期処理を並行して実行し、それらがすべて完了したら結果を配列で返す
         const [pullResponse, reviewsResponse] = await Promise.all([
-            fetch(pullUrl, { headers }),
-            fetch(reviewsUrl, { headers }),
-          ]);
+          fetch(pullUrl, { headers }),
+          fetch(reviewsUrl, { headers }),
+        ]);
 
         if (!pullResponse.ok) {
           const errorText = await pullResponse.text();

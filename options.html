@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Show Reviewer - Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f6f8fa;
+    }
+
+    .container {
+      background: white;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #24292f;
+    }
+
+    .description {
+      color: #57606a;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #24292f;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #57606a;
+      margin-top: 8px;
+    }
+
+    .hint a {
+      color: #0969da;
+      text-decoration: none;
+    }
+
+    .hint a:hover {
+      text-decoration: underline;
+    }
+
+    button {
+      background: #2da44e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2c974b;
+    }
+
+    button:active {
+      background: #298e46;
+    }
+
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .status.success {
+      background: #dafbe1;
+      border: 1px solid #2da44e;
+      color: #1a7f37;
+      display: block;
+    }
+
+    .status.error {
+      background: #ffebe9;
+      border: 1px solid #cf222e;
+      color: #cf222e;
+      display: block;
+    }
+
+    .instructions {
+      background: #fff8c5;
+      border: 1px solid #d4a72c;
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 24px;
+    }
+
+    .instructions h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: #24292f;
+    }
+
+    .instructions ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .instructions code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>GitHub Show Reviewer Settings</h1>
+    <p class="description">
+      Configure your GitHub Personal Access Token (PAT) to access the GitHub API.
+      Without a token, you may encounter 403 errors due to rate limiting.
+    </p>
+
+    <div class="form-group">
+      <label for="token">GitHub Personal Access Token</label>
+      <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      <div class="hint">
+        Your token will be securely stored.
+        <a href="https://github.com/settings/tokens/new?scopes=repo&description=GitHub%20Show%20Reviewer"
+          target="_blank">
+          Create a token here
+        </a>
+      </div>
+    </div>
+
+    <button id="save">Save</button>
+
+    <div id="status" class="status"></div>
+
+    <div class="instructions">
+      <h2>📝 How to Create a Token</h2>
+      <ol>
+        <li>
+          Click the "Create a token here" link above
+        </li>
+        <li>
+          Check the <code>repo</code> scope
+        </li>
+        <li>
+          Click "Generate token"
+        </li>
+        <li>
+          Copy the generated token (starts with <code>ghp_</code>)
+        </li>
+        <li>
+          Paste it in the input field above and click "Save"
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+
+</html>

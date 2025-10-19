@@ -19,10 +19,29 @@
   const rowPromises = new WeakMap();
   const ROW_SELECTOR = '.js-issue-row';
   const SPAN_CLASS = 'github-show-reviewer';
-  const API_HEADERS = {
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
+
+  // GitHub APIのヘッダーを取得（トークンがあれば含める）
+  async function getApiHeaders() {
+    const headers = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+
+    // Chrome storageからトークンを取得
+    try {
+      const result = await chrome.storage.sync.get(['githubToken']);
+      if (result.githubToken) {
+        headers.Authorization = `Bearer ${result.githubToken}`;
+        console.log('[GitHub Show Reviewer] Using authenticated requests');
+      } else {
+        console.warn('[GitHub Show Reviewer] No GitHub token found - using unauthenticated requests (rate limited)');
+      }
+    } catch (error) {
+      console.error('[GitHub Show Reviewer] Failed to get token from storage:', error);
+    }
+
+    return headers;
+  }
 
   // PR行の中に, レビュワー情報を表示するための<span>要素を作成して返す
   function ensureInfoSpan(row) {
@@ -46,9 +65,7 @@
       span = document.createElement('span');
       span.className = SPAN_CLASS;
     }
-
     openedBy.appendChild(span);
-
 
     // *********** 追加後 ***********
     // <div class="opened-by">
@@ -125,15 +142,25 @@
       const pullUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}`;
       const reviewsUrl = `${pullUrl}/reviews`;
       try {
+        console.log(`[GitHub Show Reviewer] Fetching PR #${prNumber}`);
+
+        // 認証ヘッダーを取得
+        const headers = await getApiHeaders();
+
+        // // API_HEADERS: GitHub API用の標準ヘッダー
+        // fetch(pullUrl, { headers: API_HEADERS }),
+        // fetch(reviewsUrl, { headers: API_HEADERS }),
+
         // Promise.all: 複数の非同期処理を並行して実行し、それらがすべて完了したら結果を配列で返す
         const [pullResponse, reviewsResponse] = await Promise.all([
-          // API_HEADERS: GitHub API用の標準ヘッダー
-          fetch(pullUrl, { headers: API_HEADERS }),
-          fetch(reviewsUrl, { headers: API_HEADERS }),
-        ]);
+            fetch(pullUrl, { headers }),
+            fetch(reviewsUrl, { headers }),
+          ]);
 
         if (!pullResponse.ok) {
-          throw new Error(`GitHub API error ${pullResponse.status}`);
+          const errorText = await pullResponse.text();
+          console.error(`[GitHub Show Reviewer] API Error:`, errorText);
+          throw new Error(`GitHub API error ${pullResponse.status}: ${errorText.substring(0, 100)}`);
         }
 
         const pullData = await pullResponse.json();
@@ -168,8 +195,10 @@
 
         // 重複を排除
         const reviewers = dedupe([...users, ...teams, ...reviewUsers]);
+        console.log(`[GitHub Show Reviewer] Found reviewers:`, reviewers);
         return { reviewers };
       } catch (error) {
+        console.error(`[GitHub Show Reviewer] Fetch error:`, error);
         return { error: error.message || 'Unknown error' };
       }
     })();
@@ -182,11 +211,21 @@
     // PR番号を抽出
     const prNumber = extractPrNumber(row);
     if (!prNumber) {
+      console.warn(`[GitHub Show Reviewer] Could not extract PR number from row`);
       return;
     }
+    console.log(`[GitHub Show Reviewer] Processing PR #${prNumber}`);
+
     // PR行の中に, レビュワー情報を表示するための<span>要素を作成して返す
     const infoSpan = ensureInfoSpan(row);
     if (!infoSpan) {
+      console.warn(`[GitHub Show Reviewer] Could not create info span for PR #${prNumber}`);
+      return;
+    }
+
+    // 既に処理中の場合はスキップ（重複リクエスト防止）
+    if (rowPromises.has(row)) {
+      console.log(`[GitHub Show Reviewer] PR #${prNumber} is already being processed`);
       return;
     }
 
@@ -201,15 +240,18 @@
 
     promise.then(({ reviewers, error }) => {
       if (rowPromises.get(row) !== promise) {
+        console.log(`[GitHub Show Reviewer] Promise mismatch for PR #${prNumber}, ignoring result`);
         return;
       }
 
       if (error) {
+        console.error(`[GitHub Show Reviewer] Error for PR #${prNumber}:`, error);
         setSpanText(infoSpan, 'Reviewed by N/A', true);
         infoSpan.title = error;
         return;
       }
 
+      console.log(`[GitHub Show Reviewer] Updating display for PR #${prNumber} with reviewers:`, reviewers);
       setSpanText(infoSpan, formatReviewerList(reviewers));
       infoSpan.removeAttribute('title');
     });

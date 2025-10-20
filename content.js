@@ -46,35 +46,46 @@
   // PR行の中に, レビュワー情報を表示するための<span>要素を作成して返す
   function ensureInfoSpan(row) {
     // row: PR行のDOM要素
-    // .opened-by: PRを作成したユーザー情報が表示される部分
-    const openedBy = row.querySelector('.opened-by');
-    if (!openedBy) {
+    // メタ情報を含むコンテナを探す
+    const metaContainer = row.querySelector('.d-flex.mt-1.text-small.color-fg-muted');
+    if (!metaContainer) {
       return null;
     }
 
+    // 既存の .d-none.d-md-inline-flex 要素を探す
+    let inlineFlexContainer = metaContainer.querySelector('.d-none.d-md-inline-flex');
+    if (!inlineFlexContainer) {
+      // 無い場合は作成
+      inlineFlexContainer = document.createElement('span');
+      inlineFlexContainer.className = 'd-none d-md-inline-flex';
+      metaContainer.appendChild(inlineFlexContainer);
+    }
+
     // *********** 追加前 ***********
-    // <div class="opened-by">
-    //   opened by araitaiga <time datetime="2025-10-18">yesterday</time>
-    // </div>
+    // <span class="d-none d-md-inline-flex">
+    //   <span class="d-inline-block ml-1">•Draft</span>
+    //   <span class="issue-meta-section ml-2">...</span>
+    // </span>
     // *****************************
 
     // SPAN_CLASS(.github-show-reviewer)というクラス名を持つ<span>要素を探す
-    let span = openedBy.querySelector(`.${SPAN_CLASS}`);
+    let reviewerSpan = inlineFlexContainer.querySelector(`.${SPAN_CLASS}`);
     // 以前の処理で挿入済みの場合はそのまま返す
-    if (!span) {
-      span = document.createElement('span');
-      span.className = SPAN_CLASS;
+    if (!reviewerSpan) {
+      reviewerSpan = document.createElement('span');
+      reviewerSpan.className = `${SPAN_CLASS} issue-meta-section ml-2`;
     }
-    openedBy.appendChild(span);
+    inlineFlexContainer.appendChild(reviewerSpan);
 
     // *********** 追加後 ***********
-    // <div class="opened-by">
-    //   opened by araitaiga <time>yesterday</time>
-    //   <span class="github-show-reviewer"></span>
-    // </div>
+    // <span class="d-none d-md-inline-flex">
+    //   <span class="d-inline-block ml-1">•Draft</span>
+    //   <span class="issue-meta-section ml-2">...</span>
+    //   <span class="github-show-reviewer issue-meta-section ml-2">...</span>
+    // </span>
     // *****************************
 
-    return span;
+    return reviewerSpan;
   }
 
   function extractPrNumber(row) {
@@ -122,9 +133,16 @@
   // <p id="msg">Hello, <span id="name">World</span>!</p>
   // text: 表示したい文字列
   function setSpanText(span, text, isError = false, isLoading = false) {
-    // textの先頭に区切り文字を付与する
-    span.textContent = ` • ${text}`;
-    // ロード中: .github-show-reviewer(white-space: normal)
+    // GitHubの他の要素と同じようにSVGアイコンを追加
+    const iconSvg = isLoading
+      ? `<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sync">
+           <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+         </svg>`
+      : `<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-eye">
+           <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"></path>
+         </svg>`;
+
+    span.innerHTML = `• ${text}`;
 
     // 成功状態
     // .github-show-reviewer--success(color: var(--fgColor-success, #1a7f37))

@@ -2,6 +2,10 @@
   white-space: normal;
 }
 
+.github-show-reviewer--success {
+  color: var(--fgColor-success, #1a7f37);
+}
+
 .github-show-reviewer--error {
   color: var(--fgColor-danger, #cf222e);
 }

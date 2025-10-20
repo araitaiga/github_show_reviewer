@@ -121,11 +121,16 @@
   // span: 基本的なグループ化タグ. 以下のようにインラインで部分的な装飾が可能
   // <p id="msg">Hello, <span id="name">World</span>!</p>
   // text: 表示したい文字列
-  function setSpanText(span, text, isError = false) {
+  function setSpanText(span, text, isError = false, isLoading = false) {
     // textの先頭に区切り文字を付与する
     span.textContent = ` • ${text}`;
+    // ロード中: .github-show-reviewer(white-space: normal)
+
+    // 成功状態
+    // .github-show-reviewer--success(color: var(--fgColor-success, #1a7f37))
+    span.classList.toggle(`${SPAN_CLASS}--success`, !isError && !isLoading);
+
     // isErrorがtrueの場合, エラースタイルを適用(style.cssで定義)
-    // 通常状態：.github-show-reviewer(white-space: normal)
     // エラー状態：.github-show-reviewer--error(color: var(--fgColor-danger, #cf222e))
     span.classList.toggle(`${SPAN_CLASS}--error`, isError);
   }
@@ -230,7 +235,7 @@
     }
 
     // レビュワー情報取得中の表示をセット
-    setSpanText(infoSpan, 'Reviewed by Loading...');
+    setSpanText(infoSpan, 'Reviewed by Loading...', false, true);
     // title属性: マウスを載せたときにブラウザが自動的に表示するツールチップの内容
     // 基本削除し, エラー発生時のみinfoSpan.titleを設定する
     infoSpan.removeAttribute('title');
@@ -246,13 +251,13 @@
 
       if (error) {
         console.error(`[GitHub Show Reviewer] Error for PR #${prNumber}:`, error);
-        setSpanText(infoSpan, 'Reviewed by N/A', true);
+        setSpanText(infoSpan, 'Reviewed by N/A', true, false);
         infoSpan.title = error;
         return;
       }
 
       console.log(`[GitHub Show Reviewer] Updating display for PR #${prNumber} with reviewers:`, reviewers);
-      setSpanText(infoSpan, formatReviewerList(reviewers));
+      setSpanText(infoSpan, formatReviewerList(reviewers), false, false);
       infoSpan.removeAttribute('title');
     });
 

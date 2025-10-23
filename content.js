@@ -123,7 +123,14 @@
     if (!reviewers || reviewers.length === 0) {
       return 'Reviewed by None';
     }
-    return `Reviewed by ${reviewers.join(', ')}`;
+    // レビュワーごとにクリック可能なリンクを作成
+    const reviewerElements = reviewers.map((reviewer) => {
+      // チーム名の場合は@を除去
+      const cleanReviewer = reviewer.startsWith('@') ? reviewer.substring(1) : reviewer;
+      const searchUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/pulls?q=sort%3Aupdated-desc+is%3Apr+review-requested%3A${encodeURIComponent(cleanReviewer)}`;
+      return `<a href="${searchUrl}" class="reviewer-link" data-reviewer="${cleanReviewer}">${reviewer}</a>`;
+    });
+    return `Reviewed by ${reviewerElements.join(', ')}`;
   }
 
   // <span>要素の中身を更新するためのユーティリティ関数

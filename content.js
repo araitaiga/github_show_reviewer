@@ -121,7 +121,7 @@
 
   function formatReviewerList(reviewers) {
     if (!reviewers || reviewers.length === 0) {
-      return 'Reviewed by None';
+      return '<strong>Reviewed by</strong> <span class="reviewer-none">None</span>';
     }
     // レビュワーごとにクリック可能なリンクを作成
     const reviewerElements = reviewers.map((reviewer) => {
@@ -130,7 +130,7 @@
       const searchUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/pulls?q=sort%3Aupdated-desc+is%3Apr+review-requested%3A${encodeURIComponent(cleanReviewer)}`;
       return `<a href="${searchUrl}" class="reviewer-link" data-reviewer="${cleanReviewer}">${reviewer}</a>`;
     });
-    return `Reviewed by ${reviewerElements.join(', ')}`;
+    return `<strong>Reviewed by</strong> ${reviewerElements.join(', ')}`;
   }
 
   // <span>要素の中身を更新するためのユーティリティ関数
@@ -273,7 +273,7 @@
     }
 
     // レビュワー情報取得中の表示をセット
-    setSpanText(infoSpan, 'Reviewed by Loading...');
+    setSpanText(infoSpan, '<strong>Reviewed by</strong> Loading...');
     // title属性をクリア（エラー発生時のみ設定）
     infoSpan.removeAttribute('title');
 
@@ -286,7 +286,7 @@
       }
 
       if (error) {
-        setSpanText(infoSpan, 'Reviewed by N/A', true);
+        setSpanText(infoSpan, '<strong>Reviewed by</strong> <span class="reviewer-na">N/A</span>', true);
         infoSpan.title = error;
         return;
       }

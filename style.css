@@ -10,6 +10,10 @@
   margin-right: 4px;
 }
 
+/* .github-show-reviewer--success {
+  color: var(--fgColor-success, #1a7f37);
+} */
+
 /* Reviewed by の部分を黒色+太字で表示 */
 .github-show-reviewer strong {
   color: var(--fgColor-default, #1f2328);

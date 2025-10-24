@@ -158,6 +158,21 @@
     span.classList.toggle(`${SPAN_CLASS}--error`, isError);
   }
 
+  // 以下のメソッドで使用されているAPIは以下
+  // # 環境変数にトークンを設定
+  // export GITHUB_TOKEN="your_github_token_here"
+
+  // # PR詳細情報を取得
+  // curl -H "Accept: application/vnd.github+json" \
+  //     -H "X-GitHub-Api-Version: 2022-11-28" \
+  //     -H "Authorization: Bearer $GITHUB_TOKEN" \ # if needed
+  //     https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}
+
+  // # レビュー情報を取得
+  // curl -H "Accept: application/vnd.github+json" \
+  //     -H "X-GitHub-Api-Version: 2022-11-28" \
+  //     -H "Authorization: Bearer $GITHUB_TOKEN" \
+  //     https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/reviews
   async function fetchReviewers(prNumber) {
     // PR番号のリクエストごとにキャッシュを作成
     const cacheKey = `${repoInfo.owner}/${repoInfo.repo}#${prNumber}`;
@@ -193,6 +208,7 @@
 
         const pullData = await pullResponse.json();
         // レビュー中のユーザーを抽出
+        // レビューを完了するとrequested_reviewersは空になるので、後段でreviewsから抽出する
         // requested_reviewers: リクエストされたレビュワーの一覧
         const users = Array.isArray(pullData.requested_reviewers)
           ? pullData.requested_reviewers.map((user) => user.login)
@@ -208,6 +224,8 @@
         }
 
         // レビュー済みのユーザーを抽出
+        // PR画面にコメントを書いたユーザーを抽出する
+        // そのままではPR作成者がコメントを書いた場合も反映されるので、作成者を除外する
         const reviewUsers = Array.isArray(reviews)
           ? reviews
             .filter(
@@ -216,10 +234,13 @@
                 review.user &&
                 review.user.login &&
                 review.state &&
-                review.state.toUpperCase() !== 'PENDING'
+                review.state.toUpperCase() !== 'PENDING' &&
+                review.user.login !== pullData.user.login  // PR作成者を除外
             )
             .map((review) => review.user.login)
           : [];
+        console.log('reviewUsers', reviewUsers);
+
 
         // 重複を排除
         const reviewers = dedupe([...users, ...teams, ...reviewUsers]);

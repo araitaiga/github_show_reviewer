@@ -121,7 +121,8 @@
 
   function formatReviewerList(reviewers) {
     if (!reviewers || reviewers.length === 0) {
-      return '<strong>Reviewed by</strong> <span class="reviewer-none">None</span>';
+      // return '<strong>Reviewer: </strong> <span class="reviewer-none">None</span>';
+      return '<span>Reviewer: </span> <span class="reviewer-none">None</span>';
     }
     // レビュワーごとにクリック可能なリンクを作成
     const reviewerElements = reviewers.map((reviewer) => {
@@ -130,7 +131,7 @@
       const searchUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/pulls?q=sort%3Aupdated-desc+is%3Apr+review-requested%3A${encodeURIComponent(cleanReviewer)}`;
       return `<a href="${searchUrl}" class="reviewer-link" data-reviewer="${cleanReviewer}">${reviewer}</a>`;
     });
-    return `<strong>Reviewed by</strong> ${reviewerElements.join(', ')}`;
+    return `<span>Reviewer: </span> ${reviewerElements.join(', ')}`;
   }
 
   // <span>要素の中身を更新するためのユーティリティ関数
@@ -138,16 +139,13 @@
   // <p id="msg">Hello, <span id="name">World</span>!</p>
   // text: 表示したい文字列
   function setSpanText(span, text, isError = false, isLoading = false) {
-    // // GitHubの他の要素と同じようにSVGアイコンを追加
-    // const iconSvg = isLoading
-    //   ? `<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sync">
-    //        <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
-    //      </svg>`
-    //   : `<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-eye">
-    //        <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"></path>
-    //      </svg>`;
+    // 目のアイコンを追加
+    const iconSvg = `<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-eye">
+           <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"></path>
+         </svg>`;
 
-    span.innerHTML = `• ${text}`;
+    // span.innerHTML = `• ${text}`;
+    span.innerHTML = `${iconSvg}${text}`;
 
     // 成功状態
     // .github-show-reviewer--success(color: var(--fgColor-success, #1a7f37))
@@ -273,7 +271,7 @@
     }
 
     // レビュワー情報取得中の表示をセット
-    setSpanText(infoSpan, '<strong>Reviewed by</strong> Loading...');
+    setSpanText(infoSpan, '<span>Reviewer: </span> Loading...');
     // title属性をクリア（エラー発生時のみ設定）
     infoSpan.removeAttribute('title');
 
@@ -286,7 +284,7 @@
       }
 
       if (error) {
-        setSpanText(infoSpan, '<strong>Reviewed by</strong> <span class="reviewer-na">N/A</span>', true);
+        setSpanText(infoSpan, '<span>Reviewer: </span> <span class="reviewer-na">N/A</span>', true);
         infoSpan.title = error;
         return;
       }

@@ -1,6 +1,6 @@
 .github-show-reviewer {
   white-space: normal;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-muted, #656d76);
   font-weight: normal;
 }
 
@@ -14,27 +14,31 @@
   color: var(--fgColor-success, #1a7f37);
 } */
 
-/* Reviewed by の部分を黒色+太字で表示 */
-.github-show-reviewer strong {
-  color: var(--fgColor-default, #1f2328);
-  font-weight: bold;
-}
+/* Reviewer: の部分をグレー色で表示 */
+/* .github-show-reviewer strong {
+  color: var(--fgColor-muted, #656d76);
+  font-weight: normal;
+} */
+/* 太字の場合 */
+/* font-weight: 600; */
 
-/* レビュワーリンクのスタイル（青色+下線で表示） */
+/* レビュワーリンクのスタイル（通常はグレー、ホバー時に青色） */
 .reviewer-link {
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-muted, #656d76);
+  /* text-decoration: none; */
   text-decoration: underline;
   cursor: pointer;
 }
 
 .reviewer-link:hover {
-  text-decoration: underline;
   color: var(--fgColor-accent, #0969da);
+  /* text-decoration: none; */
+  text-decoration: underline;
 }
 
-/* None の場合は黒色で表示 */
+/* None の場合はグレー色で表示 */
 .reviewer-none {
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-muted, #656d76);
 }
 
 /* N/A の場合は赤色で表示 */

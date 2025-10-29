@@ -13,8 +13,8 @@
     return { owner: match[1], repo: match[2] };
   }
 
+  // TODO: repoInfoをグローバル変数で管理するのをやめる
   let repoInfo = checkAndGetRepoInfo();
-  let reviewerCache = new Map();
   let rowPromises = new WeakMap();
   const ROW_SELECTOR = '.js-issue-row';
   const SPAN_CLASS = 'github-show-reviewer';
@@ -177,84 +177,69 @@
   //     -H "Authorization: Bearer $GITHUB_TOKEN" \
   //     https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/reviews
   async function fetchReviewers(prNumber) {
-    // PR番号のリクエストごとにキャッシュを作成
-    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}#${prNumber}`;
-    if (reviewerCache.has(cacheKey)) {
-      return reviewerCache.get(cacheKey);
-    }
+    const pullUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}`;
+    const reviewsUrl = `${pullUrl}/reviews`;
 
-    const request = (async () => {
-      const pullUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}`;
-      const reviewsUrl = `${pullUrl}/reviews`;
+    try {
+      console.log(`[GitHub Show Reviewer] Fetching PR #${prNumber}`);
 
-      try {
-        console.log(`[GitHub Show Reviewer] Fetching PR #${prNumber}`);
+      // 認証ヘッダーを取得
+      const headers = await getApiHeaders();
 
-        // 認証ヘッダーを取得
-        const headers = await getApiHeaders();
+      // Promise.all: 複数の非同期処理を並行して実行し、それらがすべて完了したら結果を配列で返す
+      const [pullResponse, reviewsResponse] = await Promise.all([
+        fetch(pullUrl, { headers }),
+        fetch(reviewsUrl, { headers }),
+      ]);
 
-        // // API_HEADERS: GitHub API用の標準ヘッダー
-        // fetch(pullUrl, { headers: API_HEADERS }),
-        // fetch(reviewsUrl, { headers: API_HEADERS }),
-
-        // Promise.all: 複数の非同期処理を並行して実行し、それらがすべて完了したら結果を配列で返す
-        const [pullResponse, reviewsResponse] = await Promise.all([
-          fetch(pullUrl, { headers }),
-          fetch(reviewsUrl, { headers }),
-        ]);
-
-        if (!pullResponse.ok) {
-          const errorText = await pullResponse.text();
-          console.error(`[GitHub Show Reviewer] API Error:`, errorText);
-          throw new Error(`GitHub API error ${pullResponse.status}: ${errorText.substring(0, 100)}`);
-        }
-
-        const pullData = await pullResponse.json();
-        // レビュー中のユーザーを抽出
-        // レビューを完了するとrequested_reviewersは空になるので、後段でreviewsから抽出する
-        // requested_reviewers: リクエストされたレビュワーの一覧
-        const users = Array.isArray(pullData.requested_reviewers)
-          ? pullData.requested_reviewers.map((user) => user.login)
-          : [];
-        // requested_teams: リクエストされたチームの一覧
-        const teams = Array.isArray(pullData.requested_teams)
-          ? pullData.requested_teams.map((team) => `@${team.slug}`)
-          : [];
-
-        let reviews = [];
-        if (reviewsResponse.ok) {
-          reviews = await reviewsResponse.json();
-        }
-
-        // レビュー済みのユーザーを抽出
-        // PR画面にコメントを書いたユーザーを抽出する
-        // そのままではPR作成者がコメントを書いた場合も反映されるので、作成者を除外する
-        const reviewUsers = Array.isArray(reviews)
-          ? reviews
-            .filter(
-              (review) =>
-                review &&
-                review.user &&
-                review.user.login &&
-                review.state &&
-                review.state.toUpperCase() !== 'PENDING' &&
-                review.user.login !== pullData.user.login  // PR作成者を除外
-            )
-            .map((review) => review.user.login)
-          : [];
-        console.log('reviewUsers', reviewUsers);
-
-
-        // 重複を排除
-        const reviewers = dedupe([...users, ...teams, ...reviewUsers]);
-        return { reviewers };
-      } catch (error) {
-        return { error: error.message || 'Unknown error' };
+      if (!pullResponse.ok) {
+        const errorText = await pullResponse.text();
+        console.error(`[GitHub Show Reviewer] API Error:`, errorText);
+        throw new Error(`GitHub API error ${pullResponse.status}: ${errorText.substring(0, 100)}`);
       }
-    })();
 
-    reviewerCache.set(cacheKey, request);
-    return request;
+      const pullData = await pullResponse.json();
+      // レビュー中のユーザーを抽出
+      // レビューを完了するとrequested_reviewersは空になるので、後段でreviewsから抽出する
+      // requested_reviewers: リクエストされたレビュワーの一覧
+      const users = Array.isArray(pullData.requested_reviewers)
+        ? pullData.requested_reviewers.map((user) => user.login)
+        : [];
+      // requested_teams: リクエストされたチームの一覧
+      const teams = Array.isArray(pullData.requested_teams)
+        ? pullData.requested_teams.map((team) => `@${team.slug}`)
+        : [];
+
+      let reviews = [];
+      if (reviewsResponse.ok) {
+        reviews = await reviewsResponse.json();
+      }
+
+      // レビュー済みのユーザーを抽出
+      // PR画面にコメントを書いたユーザーを抽出する
+      // そのままではPR作成者がコメントを書いた場合も反映されるので、作成者を除外する
+      const reviewUsers = Array.isArray(reviews)
+        ? reviews
+          .filter(
+            (review) =>
+              review &&
+              review.user &&
+              review.user.login &&
+              review.state &&
+              review.state.toUpperCase() !== 'PENDING' &&
+              review.user.login !== pullData.user.login  // PR作成者を除外
+          )
+          .map((review) => review.user.login)
+        : [];
+      console.log('reviewUsers', reviewUsers);
+
+
+      // 重複を排除
+      const reviewers = dedupe([...users, ...teams, ...reviewUsers]);
+      return { reviewers };
+    } catch (error) {
+      return { error: error.message || 'Unknown error' };
+    }
   }
 
   function updateRow(row) {
@@ -297,6 +282,11 @@
       setSpanText(infoSpan, formatReviewerList(reviewers));
       infoSpan.removeAttribute('title');
     });
+    promise.finally(() => {
+      if (rowPromises.get(row) === promise) {
+        rowPromises.delete(row);
+      }
+    });
 
     row.dataset.githubShowReviewerProcessed = 'true';
   }
@@ -326,8 +316,6 @@
       return;
     }
 
-    // キャッシュをクリア
-    reviewerCache = new Map();
     rowPromises = new WeakMap();
 
     // 既存の処理済みフラグをリセット

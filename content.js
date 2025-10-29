@@ -126,9 +126,14 @@
     }
     // レビュワーごとにクリック可能なリンクを作成
     const reviewerElements = reviewers.map((reviewer) => {
+      const isTeam = reviewer.startsWith('@');
       // チーム名の場合は@を除去
       const cleanReviewer = reviewer.startsWith('@') ? reviewer.substring(1) : reviewer;
-      const searchUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/pulls?q=sort%3Aupdated-desc+is%3Apr+review-requested%3A${encodeURIComponent(cleanReviewer)}`;
+      // チームの場合, 検索書式は`team-review-requested:owner/team-name`
+      const queryOperator = isTeam
+        ? `team-review-requested:${repoInfo.owner}/${cleanReviewer}`
+        : `review-requested:${cleanReviewer}`;
+      const searchUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/pulls?q=sort%3Aupdated-desc+is%3Apr+${encodeURIComponent(queryOperator)}`;
       return `<a href="${searchUrl}" class="reviewer-link" data-reviewer="${cleanReviewer}">${reviewer}</a>`;
     });
     return `<span>Reviewer: </span> ${reviewerElements.join(', ')}`;

@@ -287,18 +287,12 @@
         rowPromises.delete(row);
       }
     });
-
-    row.dataset.githubShowReviewerProcessed = 'true';
   }
 
   function processRows(root = document) {
     // DOMツリー内の検索対象範囲(root)から、ROW_SELECTORに一致する要素を検索
     const rows = root.querySelectorAll(ROW_SELECTOR);
     rows.forEach((row) => {
-      // 既に処理済みの行はスキップ
-      if (row.dataset.githubShowReviewerProcessed === 'true') {
-        return;
-      }
       updateRow(row);
     });
   }
@@ -318,11 +312,6 @@
 
     rowPromises = new WeakMap();
 
-    // 既存の処理済みフラグをリセット
-    document.querySelectorAll(`${ROW_SELECTOR}[data-github-show-reviewer-processed]`).forEach(row => {
-      row.dataset.githubShowReviewerProcessed = '';
-    });
-
     // MutationObserverを作成して監視開始
     if (!observer) {
       observer = new MutationObserver((mutations) => {
@@ -334,14 +323,12 @@
             }
             // 追加されたノードがPR行の場合
             if (node.matches?.(ROW_SELECTOR)) {
-              node.dataset.githubShowReviewerProcessed = '';
               updateRow(node);
             }
             // 追加されたノードの子要素にPR行がある場合
             const nestedRows = node.querySelectorAll?.(ROW_SELECTOR);
             if (nestedRows && nestedRows.length > 0) {
               nestedRows.forEach((row) => {
-                row.dataset.githubShowReviewerProcessed = '';
                 updateRow(row);
               });
             }
